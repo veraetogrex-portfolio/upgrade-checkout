@@ -1,0 +1,145 @@
+/* Upgrade Checkout — github.com/veraetogrex-portfolio · zero dependencies */
+:root {
+  --bg: #07080c;
+  --line: rgba(255, 255, 255, .14);
+  --text: #f2f3f7;
+  --muted: #a4a7b6;
+  --faint: #7f8293;
+  --pulse: #7c6cff;
+  --pulse-soft: #a69bff;
+  --ok: #3fe0d0;
+  --err: #ff7a45;
+  --mono: ui-monospace, monospace;
+  --glow-x: 50vw;    /* set from JS: the card's centre on the page */
+  --glow-y: 50vh;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; min-height: 100vh; display: grid; place-items: center;
+  background: radial-gradient(55% 50% at 32% 54%, #121226, transparent 70%), radial-gradient(60% 55% at 50% 50%, #0d0f16, var(--bg) 75%);
+  color: var(--text); font: 16px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.checkout { position: relative; z-index: 1; width: 1138px; }
+@media (max-width: 600px) { .checkout { zoom: .32; } }
+
+/* ── stepper ─────────────────────────────────────────── */
+.steps { display: flex; justify-content: center; align-items: flex-start; }
+.step { width: 120px; margin: 0 -42px; display: flex; flex-direction: column; align-items: center; gap: 10px; font: 500 15px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--faint); transition: color .35s; }
+.step i { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; border: 1.5px solid var(--line); background: #0e1016; font: 600 15px var(--mono); font-style: normal; transition: all .35s; }
+.step.is-on { color: var(--text); }
+.step.is-on i { border-color: var(--pulse); box-shadow: 0 0 0 5px rgba(124, 108, 255, .18); }
+.step.is-done i, .step.is-ion i { font-size: 0; }
+.step.is-done i::after, .step.is-ion i::after { content: "✓"; font-size: 17px; }
+.step.is-done { color: var(--muted); }
+.step.is-done i { border-color: var(--pulse); background: var(--pulse); color: #fff; }
+.step.is-ion { color: var(--ok); }
+.step.is-ion i { border-color: var(--ok); background: var(--ok); color: #05221f; box-shadow: 0 0 0 6px rgba(63, 224, 208, .2), 0 0 24px rgba(63, 224, 208, .6); }
+.steps-line { position: relative; width: 178px; height: 2px; margin-top: 17px; background: var(--line); overflow: hidden; }
+.steps-line b { position: absolute; inset: 0; background: var(--pulse); transform-origin: 0 50%; scale: 0 1; }
+.steps-line.is-full b { scale: 1 1; }
+.is-paid .steps-line-2 b { background: var(--ok); }
+
+.stage { position: relative; height: 570px; margin-top: 40px; }
+
+/* ── the card ────────────────────────────────────────── */
+.card-wrap { position: absolute; left: 0; top: 121px; width: 520px; height: 328px; cursor: default; }
+.is-paid .card-wrap { cursor: pointer; }
+.card-lift { position: absolute; inset: 0; perspective: 1700px; }
+.card-lift.is-shake { animation: shake .45s; }
+@keyframes shake { 15% { translate: -18px; } 35% { translate: 15px; } 55% { translate: -10px; } 75% { translate: 6px; } }
+.card { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .72s cubic-bezier(.32, 1.25, .45, 1); }
+.card.is-flipped { transform: rotateY(180deg); }
+.face {
+  position: absolute; inset: 0; border-radius: 24px; overflow: hidden; backface-visibility: hidden;
+  background: radial-gradient(70% 90% at 100% 0%, rgba(63, 224, 208, .2), transparent 60%), radial-gradient(80% 100% at 0% 100%, rgba(124, 108, 255, .42), transparent 62%), linear-gradient(135deg, #28264a, #12131e 55%, #101820);
+  border: 1px solid rgba(255, 255, 255, .18);
+  box-shadow: 0 50px 100px -30px rgba(0, 0, 0, .85), 0 30px 90px -40px rgba(124, 108, 255, .65), inset 0 1px 0 rgba(255, 255, 255, .18);
+  transition: border-color .5s, box-shadow .6s;
+}
+.is-paid .face { border-color: rgba(63, 224, 208, .65); box-shadow: 0 50px 100px -30px rgba(0, 0, 0, .85), 0 0 90px -6px rgba(63, 224, 208, .6); }
+.back { transform: rotateY(180deg); }
+.engrave { position: absolute; inset: 0; fill: none; stroke: rgba(255, 255, 255, .18); }
+.sheen { position: absolute; inset: 0; opacity: 0; background: linear-gradient(105deg, transparent 35%, rgba(166, 155, 255, .22) 48%, rgba(255, 255, 255, .1) 50%, transparent 62%); background-size: 300% 100%; }
+
+.card-top { position: absolute; left: 34px; right: 34px; top: 28px; display: flex; justify-content: space-between; font: 500 13px var(--mono); letter-spacing: .18em; text-transform: uppercase; color: rgba(255, 255, 255, .55); }
+.card-top b { color: var(--text); font-weight: 500; }
+.card-chip { position: absolute; left: 34px; top: 92px; fill: rgba(201, 194, 255, .08); stroke: rgba(201, 194, 255, .6); stroke-width: 1.4; }
+.card-chip .wireless { fill: none; stroke: rgba(255, 255, 255, .5); stroke-width: 2; stroke-linecap: round; }
+.card-number { position: absolute; left: 20px; top: 166px; width: 480px; height: 66px; padding: 0 14px; border-radius: 12px; display: flex; align-items: center; gap: 22px; border: 1px solid transparent; font: 500 36px var(--mono); transition: border-color .25s, background .25s; }
+.card.is-typing .card-number { border-color: rgba(124, 108, 255, .55); background: rgba(124, 108, 255, .07); }
+.card-number span { display: flex; }
+.card-number i { position: relative; width: 22px; text-align: center; font-style: normal; }
+.card-number i.is-empty { color: rgba(255, 255, 255, .28); }
+.card-number i.is-pop { animation: drop .26s cubic-bezier(.34, 1.56, .64, 1); }
+.card-number i.is-caret::after { content: ""; position: absolute; left: 2px; right: 2px; bottom: -6px; height: 3px; border-radius: 2px; background: var(--pulse); box-shadow: 0 0 10px var(--pulse); }
+@keyframes drop { from { translate: 0 -14px; opacity: 0; } }
+.card-bottom { position: absolute; left: 34px; bottom: 28px; display: flex; gap: 44px; }
+.card-bottom small, .cvv-label { display: block; font: 500 11px var(--mono); letter-spacing: .2em; text-transform: uppercase; color: rgba(255, 255, 255, .5); }
+.card-bottom span { display: block; margin-top: 6px; font: 500 20px var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+
+.stripe { position: absolute; left: 0; right: 0; top: 40px; height: 62px; background: linear-gradient(#05060a, #0b0c12); }
+.signature { position: absolute; left: 34px; top: 146px; width: 318px; height: 56px; border-radius: 8px; background: repeating-linear-gradient(-45deg, rgba(255, 255, 255, .1) 0 6px, rgba(255, 255, 255, .05) 6px 12px); }
+.cvv-label { position: absolute; left: 366px; top: 114px; width: 120px; text-align: center; color: var(--pulse-soft); }
+.card-cvv { position: absolute; left: 366px; top: 138px; width: 120px; height: 72px; border-radius: 12px; display: grid; place-items: center; border: 1.5px solid rgba(255, 255, 255, .25); background: rgba(7, 8, 12, .55); font: 600 34px var(--mono); letter-spacing: .18em; transition: border-color .25s, box-shadow .25s; }
+.card.is-flipped .card-cvv { border-color: var(--pulse); box-shadow: 0 0 0 5px rgba(124, 108, 255, .2), 0 0 30px rgba(124, 108, 255, .55); }
+.card-cvv span { color: rgba(255, 255, 255, .25); }
+.back-line { position: absolute; left: 34px; right: 34px; bottom: 30px; display: flex; justify-content: space-between; font: 500 11px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: rgba(255, 255, 255, .4); }
+
+/* the stroke that runs around the card while the bank thinks */
+.outline { position: absolute; left: -14px; top: -14px; width: 548px; height: 356px; overflow: visible; opacity: 0; fill: none; }
+.outline-base { stroke: rgba(124, 108, 255, .18); stroke-width: 1.5; }
+.outline-run  { stroke: var(--pulse); stroke-width: 4; stroke-linecap: round; filter: drop-shadow(0 0 8px var(--pulse)); }
+.is-paid .outline-base { stroke: rgba(63, 224, 208, .35); }
+.is-paid .outline-run  { stroke: var(--ok); filter: drop-shadow(0 0 8px var(--ok)); }
+.is-declined .outline-base { stroke: rgba(255, 122, 69, .35); }
+.is-declined .outline-run  { stroke: var(--err); filter: drop-shadow(0 0 8px var(--err)); }
+
+/* ── form ────────────────────────────────────────────── */
+.pay-form { position: absolute; right: 0; top: 0; width: 528px; }
+.plan { display: flex; justify-content: space-between; align-items: flex-end; }
+.plan-kicker { margin: 0; font: 500 14px var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--faint); }
+.plan-name { margin: 8px 0 0; font: 600 44px/1 system-ui, sans-serif; letter-spacing: -.02em; }
+.plan-price { margin: 0; font: 600 40px/1 system-ui, sans-serif; }
+.plan-price small { font: 500 16px var(--mono); color: var(--faint); text-transform: uppercase; }
+.plan-sub { margin: 12px 0 0; font-size: 17px; color: var(--muted); }
+.field { display: block; margin-top: 22px; }
+.field span { display: flex; justify-content: space-between; margin-bottom: 9px; font: 500 14px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--faint); }
+.field em { font-style: normal; color: var(--err); letter-spacing: .08em; }
+.field input {
+  width: 100%; height: 64px; padding: 0 20px; border-radius: 10px; border: 1.5px solid var(--line); background: rgba(255, 255, 255, .035);
+  color: var(--text); font: 500 24px var(--mono); letter-spacing: .06em; outline: none; transition: border-color .2s, box-shadow .2s;
+}
+.field input::placeholder { color: #4a4d5c; }
+.field input:focus { border-color: var(--pulse); box-shadow: 0 0 0 5px rgba(124, 108, 255, .16); }
+.field.is-bad input { border-color: var(--err); box-shadow: 0 0 0 4px rgba(255, 122, 69, .15); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.pay { width: 100%; height: 66px; margin-top: 30px; border: 0; border-radius: 12px; background: #6a5af9; color: #fff; font: 600 21px system-ui, sans-serif; cursor: pointer; transition: background .2s, box-shadow .2s; }
+.pay:hover, .pay:focus-visible { background: #7868ff; box-shadow: 0 0 0 6px rgba(124, 108, 255, .22), 0 14px 36px -10px var(--pulse); outline: none; }
+.secure { margin: 16px 0 0; text-align: center; font: 500 13px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+
+/* ── verdict ─────────────────────────────────────────── */
+.verdict { position: absolute; left: 0; right: 0; top: 440px; text-align: center; pointer-events: none; opacity: 0; translate: 0 12px; transition: opacity .26s, translate .26s; }
+.verdict.is-on { opacity: 1; translate: 0; }
+.verdict-title { display: inline-flex; align-items: center; gap: 18px; margin: 0; font: 600 34px/1 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.badge { display: none; width: 56px; height: 56px; border-radius: 50%; place-items: center; background: var(--ok); box-shadow: 0 0 30px rgba(63, 224, 208, .6); }
+.badge svg { width: 34px; }
+.badge path { fill: none; stroke: #05221f; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 100; stroke-dashoffset: 100; }
+.is-paid .verdict-title, .is-declined .verdict-title { font-size: 46px; letter-spacing: -.02em; text-transform: none; }
+.is-paid .verdict-title { color: var(--ok); }
+.is-paid .badge { display: grid; }
+.is-declined .verdict-title { color: var(--err); }
+.verdict-meta { margin: 20px 0 0; font: 500 22px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+
+/* ── the payoff: Ion light washes the page ───────────── */
+.flood {
+  position: fixed; left: var(--glow-x); top: var(--glow-y); width: 2600px; height: 2600px; translate: -50% -50%; border-radius: 50%;
+  pointer-events: none; opacity: 0; scale: .1;
+  background: radial-gradient(circle, rgba(63, 224, 208, .6), rgba(63, 224, 208, .38) 16%, rgba(63, 224, 208, .18) 33%, rgba(63, 224, 208, .06) 50%, transparent 66%);
+}
+.wave {
+  position: fixed; left: var(--glow-x); top: var(--glow-y); z-index: 2; width: 520px; height: 328px; translate: -50% -50%; border-radius: 30px; pointer-events: none; opacity: 0;
+  border: 2px solid var(--ok); box-shadow: 0 0 34px rgba(63, 224, 208, .6), inset 0 0 24px rgba(63, 224, 208, .35);
+}
+
+@media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .15s !important; } }

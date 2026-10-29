@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Upgrade Checkout — veraetogrex_portfolio</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Upgrade Checkout · zero dependencies · github.com/veraetogrex-portfolio -->
+  <div class="flood" aria-hidden="true"></div>
+  <div class="wave" aria-hidden="true"></div><div class="wave" aria-hidden="true"></div>
+
+  <main class="checkout" id="checkout">
+    <nav class="steps" aria-label="Checkout steps">
+      <span class="step is-done"><i>1</i>Plan</span>
+      <span class="steps-line is-full"><b></b></span>
+      <span class="step step-pay is-on"><i>2</i>Payment</span>
+      <span class="steps-line steps-line-2"><b></b></span>
+      <span class="step step-done"><i>3</i>Done</span>
+    </nav>
+
+    <div class="stage">
+      <div class="card-wrap" title="Card preview">
+        <svg class="outline" viewBox="0 0 548 356" aria-hidden="true">
+          <rect class="outline-base" x="2" y="2" width="544" height="352" rx="34"/>
+          <rect class="outline-run" x="2" y="2" width="544" height="352" rx="34" pathLength="1000" stroke-dasharray="200 800"/>
+        </svg>
+        <div class="card-lift">
+          <div class="card" aria-hidden="true">
+            <div class="face front">
+              <svg class="engrave" viewBox="0 0 520 328">
+                <path d="M520 30 A150 150 0 0 0 370 180 M520 70 A110 110 0 0 0 410 180 M520 110 A70 70 0 0 0 450 180"/>
+                <path d="M16 40 V16 H40 M480 16 H504 V40 M16 288 V312 H40 M504 288 V312 H480"/>
+                <path d="M300 0 V328 M0 150 H520" stroke-dasharray="2 6"/>
+              </svg>
+              <div class="sheen"></div>
+              <div class="card-top"><span><b>Veraetogrex</b> pay · CL-07</span><span>Team Pro</span></div>
+              <svg class="card-chip" width="120" height="60" viewBox="0 0 120 60">
+                <rect x="1" y="4" width="62" height="48" rx="10"/>
+                <path d="M1 20 H20 M1 36 H20 M44 20 H63 M44 36 H63 M20 4 V52 M44 4 V52 M20 28 H44"/>
+                <path class="wireless" d="M84 16 a18 18 0 0 1 0 24 M92 10 a28 28 0 0 1 0 36 M100 4 a38 38 0 0 1 0 48"/>
+              </svg>
+              <div class="card-number"></div>
+              <div class="card-bottom">
+                <div><small>Cardholder</small><span class="card-name">Mira Sato</span></div>
+                <div><small>Valid thru</small><span class="card-expiry">09/29</span></div>
+              </div>
+            </div>
+            <div class="face back">
+              <div class="stripe"></div>
+              <div class="signature"></div>
+              <small class="cvv-label">CVV</small>
+              <div class="card-cvv"></div>
+              <div class="back-line"><span>Authorized signature</span><span>secure element 07</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <form class="pay-form" novalidate>
+        <div class="plan">
+          <div><p class="plan-kicker">Upgrade plan</p><h1 class="plan-name">Team Pro</h1></div>
+          <p class="plan-price">$24<small> / mo</small></p>
+        </div>
+        <p class="plan-sub">Unlimited projects · 10 seats · priority sync</p>
+
+        <label class="field"><span>Card number <em></em></span>
+          <input name="number" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" maxlength="19"></label>
+        <label class="field"><span>Name on card</span>
+          <input name="name" autocomplete="cc-name" value="Mira Sato" maxlength="22"></label>
+        <div class="two">
+          <label class="field"><span>Expiry</span>
+            <input name="expiry" autocomplete="cc-exp" value="09 / 29" maxlength="7"></label>
+          <label class="field"><span>CVV <em></em></span>
+            <input name="cvv" type="password" inputmode="numeric" autocomplete="cc-csc" placeholder="•••" maxlength="3"></label>
+        </div>
+        <button class="pay" type="submit">Upgrade · $24</button>
+        <p class="secure">Encrypted · test decline 4000 0000 0000 0002</p>
+      </form>
+
+      <div class="verdict" role="status">
+        <p class="verdict-title"><span class="badge"><svg viewBox="0 0 34 34"><path d="M8 18 L14.5 24 L26 11" pathLength="100"/></svg></span><span class="verdict-text"></span></p>
+        <p class="verdict-meta"></p>
+      </div>
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

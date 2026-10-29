@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>T05 Upgrade Checkout — the card turns around for the CVV</title>
+<link rel="stylesheet" href="_shared/nocturne.css">
+<style>
+  #stage{background:radial-gradient(ellipse 55% 50% at 32% 54%,#121226 0%,transparent 70%),radial-gradient(ellipse 60% 55% at 50% 50%,#0D0F16 0%,var(--void) 75%)}
+
+  /* stepper */
+  .stepper{position:absolute;left:470px;top:56px;width:500px;height:60px;z-index:3}
+  .stepper .line{position:absolute;top:17px;height:2px;background:var(--line-2);border-radius:1px;overflow:hidden}
+  .stepper .line b{position:absolute;inset:0;background:var(--pulse);transform-origin:0 50%;transform:scaleX(0)}
+  .stepper .l1{left:36px;width:214px}.stepper .l2{left:250px;width:214px}
+  .stepper .l1 b{transform:scaleX(1)}
+  .step{position:absolute;top:0;width:120px;margin-left:-60px;text-align:center}
+  .step .n{width:36px;height:36px;margin:0 auto;border-radius:50%;border:1.5px solid var(--line-2);background:var(--panel);display:flex;align-items:center;justify-content:center;font:600 15px var(--f-mono);color:var(--text-3);transition:all .35s}
+  .step .t{margin-top:10px;font:500 15px var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);transition:color .35s}
+  .step.done .n{border-color:var(--pulse);background:var(--pulse);color:#fff}
+  .step.done .t{color:var(--text-2)}
+  .step.on .n{border-color:var(--pulse);color:var(--text);box-shadow:0 0 0 5px rgba(124,108,255,.18)}
+  .step.on .t{color:var(--text)}
+  .step.ion .n{border-color:var(--ion);background:var(--ion);color:#05221F;box-shadow:0 0 0 6px rgba(63,224,208,.2),0 0 24px rgba(63,224,208,.6)}
+  .step.ion .t{color:var(--ion)}
+  .step svg{display:none}.step.done svg,.step.ion svg{display:block}.step.done .k,.step.ion .k{display:none}
+
+  /* card */
+  .cardmove{position:absolute;left:130px;top:272px;width:520px;height:328px;z-index:4;will-change:transform;transform-origin:0 0;transform:scale(1.15)}
+  .persp{position:absolute;inset:0;perspective:1700px}
+  .persp.shake{animation:shake .45s}
+  @keyframes shake{15%{transform:translateX(-18px)}35%{transform:translateX(15px)}55%{transform:translateX(-10px)}75%{transform:translateX(6px)}}
+  .card3d{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .72s cubic-bezier(.32,1.25,.45,1)}
+  .card3d.flipped{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;border-radius:24px;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    background:
+      radial-gradient(ellipse 70% 90% at 100% 0%,rgba(63,224,208,.20),transparent 60%),
+      radial-gradient(ellipse 80% 100% at 0% 100%,rgba(124,108,255,.42),transparent 62%),
+      linear-gradient(135deg,rgba(40,38,74,.92),rgba(18,19,30,.94) 55%,rgba(16,24,32,.95));
+    border:1px solid rgba(255,255,255,.18);
+    box-shadow:0 50px 100px -30px rgba(0,0,0,.85),0 30px 90px -40px rgba(124,108,255,.65),0 1px 0 rgba(255,255,255,.18) inset}
+  .face::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.07) 42%,transparent 54%);pointer-events:none}
+  .sheen{position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 35%,rgba(166,155,255,.22) 48%,rgba(255,255,255,.10) 50%,transparent 62%);background-size:300% 100%;background-position:120% 0;opacity:0}
+  .face.back{transform:rotateY(180deg)}
+  .engrave{position:absolute;inset:0;pointer-events:none}
+  .engrave *{vector-effect:non-scaling-stroke}
+  .ctop{position:absolute;left:34px;right:34px;top:28px;display:flex;justify-content:space-between;font:500 13px var(--f-mono);letter-spacing:.18em;color:rgba(255,255,255,.55);text-transform:uppercase}
+  .ctop b{color:var(--text);font-weight:500}
+  .chip{position:absolute;left:34px;top:92px}
+  .num{position:absolute;left:34px;top:178px;display:flex;gap:22px;font:500 36px var(--f-mono);letter-spacing:.04em;color:var(--text);white-space:nowrap}
+  .num .g{display:flex}
+  .num i{font-style:normal;display:inline-block;width:22px;text-align:center;position:relative}
+  .num i.ph{color:rgba(255,255,255,.28)}
+  .num i.pop{animation:dpop .26s var(--ease-back)}
+  @keyframes dpop{from{transform:translateY(-14px);opacity:0}to{transform:none;opacity:1}}
+  .num i.cur::after{content:"";position:absolute;left:2px;right:2px;bottom:-6px;height:3px;border-radius:2px;background:var(--pulse);box-shadow:0 0 10px var(--pulse);animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:.2}}
+  .numfocus{position:absolute;left:20px;top:166px;width:480px;height:66px;border-radius:12px;border:1px solid rgba(124,108,255,.0);transition:border-color .25s,background .25s}
+  .numfocus.on{border-color:rgba(124,108,255,.55);background:rgba(124,108,255,.07)}
+  .cbot{position:absolute;left:34px;right:34px;bottom:28px;display:flex;align-items:flex-end;gap:44px}
+  .cbot .k{font:500 11px var(--f-mono);letter-spacing:.2em;color:rgba(255,255,255,.5);text-transform:uppercase}
+  .cbot .v{margin-top:6px;font:500 20px var(--f-mono);letter-spacing:.1em;color:var(--text);text-transform:uppercase}
+  .mark{margin-left:auto}
+
+  .stripe{position:absolute;left:0;right:0;top:40px;height:62px;background:linear-gradient(180deg,#05060A,#0B0C12);box-shadow:0 1px 0 rgba(255,255,255,.06)}
+  .sig{position:absolute;left:34px;top:146px;width:318px;height:56px;border-radius:8px;
+    background:repeating-linear-gradient(-45deg,rgba(255,255,255,.10) 0 6px,rgba(255,255,255,.05) 6px 12px)}
+  .cvvbox{position:absolute;left:366px;top:138px;width:120px;height:72px;border-radius:12px;border:1.5px solid rgba(255,255,255,.25);background:rgba(7,8,12,.55);
+    display:flex;align-items:center;justify-content:center;font:600 34px var(--f-mono);letter-spacing:.18em;color:var(--text);transition:border-color .25s,box-shadow .25s}
+  .cvvbox.on{border-color:var(--pulse);box-shadow:0 0 0 5px rgba(124,108,255,.2),0 0 30px rgba(124,108,255,.55)}
+  .cvvbox .ph{color:rgba(255,255,255,.25)}
+  .cvvlab{position:absolute;left:366px;top:114px;width:120px;text-align:center;font:500 12px var(--f-mono);letter-spacing:.2em;color:var(--pulse-soft)}
+  .bline{position:absolute;left:34px;right:34px;bottom:30px;display:flex;justify-content:space-between;font:500 11px var(--f-mono);letter-spacing:.16em;color:rgba(255,255,255,.4);text-transform:uppercase}
+
+  .outline{position:absolute;left:-14px;top:-14px;width:548px;height:356px;pointer-events:none;overflow:visible;opacity:0}
+  .outline rect{fill:none}
+  .outline .run{stroke:var(--pulse);stroke-width:4;stroke-linecap:round;filter:drop-shadow(0 0 8px currentColor)}
+
+  /* form */
+  .form{position:absolute;left:790px;top:176px;width:528px;z-index:3;will-change:transform,opacity}
+  .fhead{display:flex;align-items:flex-end;justify-content:space-between}
+  .fk{font:500 14px var(--f-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--text-3)}
+  .ft{margin-top:8px;font:600 44px/1 var(--f-text);letter-spacing:-.02em}
+  .price{font:600 40px/1 var(--f-display);letter-spacing:.01em}
+  .price small{font:500 16px var(--f-mono);color:var(--text-3);letter-spacing:.06em}
+  .fsub{margin-top:12px;font:400 17px var(--f-text);color:var(--text-2)}
+  .fl{display:block;margin-top:22px}
+  .fl .lab{display:flex;justify-content:space-between;font:500 14px var(--f-mono);letter-spacing:.16em;text-transform:uppercase;color:var(--text-3);margin-bottom:9px}
+  .fl .lab em{font-style:normal;color:var(--flare);letter-spacing:.08em;opacity:0;transition:opacity .2s}
+  .fl.bad .lab em{opacity:1}
+  .fl.bad .field{border-color:var(--flare);box-shadow:0 0 0 4px rgba(255,122,69,.15)}
+  .field{width:100%;height:64px;font:500 24px var(--f-mono);letter-spacing:.06em}
+  .field::placeholder{color:#4A4D5C}
+  .field::selection{background:rgba(124,108,255,.45);color:#fff}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .pay{width:100%;height:66px;margin-top:30px;font:600 21px var(--f-text);border-radius:12px;transition:box-shadow .2s,background .2s,transform .15s}
+  .pay.li-hover,.pay:hover{background:#7868FF;box-shadow:0 0 0 6px rgba(124,108,255,.22),0 14px 36px -10px rgba(124,108,255,1)}
+  .pay:focus-visible{outline:2px solid var(--pulse-pale);outline-offset:3px}
+  .secure{margin-top:16px;text-align:center;font:500 13px var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--text-3)}
+
+  /* verdict */
+  .verdict{position:absolute;left:0;right:0;top:612px;text-align:center;z-index:3;pointer-events:none}
+  .vt{display:inline-flex;align-items:center;gap:18px;font:600 46px/1 var(--f-text);letter-spacing:-.02em;opacity:0;transform:translateY(12px)}
+  .vt .badge{width:56px;height:56px;border-radius:50%;background:var(--ion);display:none;align-items:center;justify-content:center;box-shadow:0 0 30px rgba(63,224,208,.6)}
+  .vt .badge path{stroke:#05221F;stroke-width:5;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:100;stroke-dashoffset:100}
+  .vt.ok{color:var(--ion)}.vt.ok .badge{display:flex}
+  .vt.err{color:var(--flare)}
+  .vt.proc{color:var(--text-2);font:600 34px/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase}
+  .vm{margin-top:20px;font:500 22px var(--f-mono);letter-spacing:.1em;color:var(--text-2);text-transform:uppercase;opacity:0}
+  .vm b{color:var(--text);font-weight:500}
+  /* payoff: the card's Ion success light washes the screen */
+  .flood{position:absolute;left:720px;top:384px;width:2600px;height:2600px;margin:-1300px 0 0 -1300px;border-radius:50%;z-index:1;pointer-events:none;opacity:0;transform:scale(.1);
+    background:radial-gradient(circle,rgba(63,224,208,.6) 0%,rgba(63,224,208,.38) 16%,rgba(63,224,208,.18) 33%,rgba(63,224,208,.06) 50%,transparent 66%)}
+  .cwave{position:absolute;left:720px;top:384px;width:598px;height:377px;border-radius:30px;z-index:3;pointer-events:none;opacity:0;transform:translate(-50%,-50%);
+    border:2px solid var(--ion);box-shadow:0 0 34px rgba(63,224,208,.6),0 0 24px rgba(63,224,208,.35) inset}
+  .face{transition:border-color .5s,box-shadow .6s}
+  .card3d.won .face{border-color:rgba(63,224,208,.65);box-shadow:0 50px 100px -30px rgba(0,0,0,.85),0 0 90px -6px rgba(63,224,208,.6),0 1px 0 rgba(255,255,255,.18) inset}
+</style>
+</head>
+<body>
+<div id="stage" class="grid" data-title="T05 Upgrade Checkout" data-url="veraetogrex-portfolio.github.io/billing/upgrade">
+  <div class="flood" id="flood"></div><div class="cwave" id="cw1"></div><div class="cwave" id="cw2"></div>
+  <div class="stepper" id="stepper">
+    <div class="line l1"><b></b></div><div class="line l2"><b id="l2"></b></div>
+    <div class="step done" style="left:36px"><div class="n"><span class="k">1</span><svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="t">Plan</div></div>
+    <div class="step on" id="sPay" style="left:250px"><div class="n"><span class="k">2</span><svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="t">Payment</div></div>
+    <div class="step" id="sDone" style="left:464px"><div class="n"><span class="k">3</span><svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="t">Done</div></div>
+  </div>
+
+  <div class="cardmove" id="cardmove">
+    <svg class="outline" id="outline" viewBox="0 0 548 356"><rect x="2" y="2" width="544" height="352" rx="34" stroke="rgba(124,108,255,.18)" stroke-width="1.5" id="obase"/><rect class="run" id="orun" x="2" y="2" width="544" height="352" rx="34" pathLength="1000" stroke-dasharray="200 800"/></svg>
+    <div class="persp" id="persp">
+      <div class="card3d" id="card3d">
+        <div class="face front">
+          <svg class="engrave" viewBox="0 0 520 328" fill="none">
+            <g stroke="rgba(255,255,255,.16)" stroke-width="1">
+              <path d="M520 30 A150 150 0 0 0 370 180"/><path d="M520 70 A110 110 0 0 0 410 180"/><path d="M520 110 A70 70 0 0 0 450 180"/>
+              <path d="M300 0 V328" stroke-dasharray="2 6"/><path d="M0 150 H520" stroke-dasharray="2 6"/>
+            </g>
+            <g stroke="rgba(255,255,255,.22)" stroke-width="1">
+              <path d="M16 40 V16 H40"/><path d="M480 16 H504 V40"/><path d="M16 288 V312 H40"/><path d="M504 288 V312 H480"/>
+              <circle cx="442" cy="112" r="4"/><path d="M442 98 V106 M442 118 V126 M428 112 H436 M448 112 H456"/>
+            </g>
+            <g stroke="rgba(255,255,255,.18)">
+              <path d="M300 246 H486"/>
+              <path d="M300 246 v-6 M318.6 246 v-4 M337.2 246 v-4 M355.8 246 v-4 M374.4 246 v-6 M393 246 v-4 M411.6 246 v-4 M430.2 246 v-4 M448.8 246 v-6 M467.4 246 v-4 M486 246 v-6"/>
+            </g>
+          </svg>
+          <div class="sheen" id="sheen"></div>
+          <div class="ctop"><span><b>VX//Pay</b> · CL-07</span><span>Team Pro</span></div>
+          <svg class="chip" width="120" height="60" viewBox="0 0 120 60" fill="none">
+            <rect x="1" y="4" width="62" height="48" rx="10" stroke="#C9C2FF" stroke-opacity=".75" stroke-width="1.5" fill="rgba(201,194,255,.08)"/>
+            <path d="M1 20 H20 M1 36 H20 M44 20 H63 M44 36 H63 M20 4 V52 M44 4 V52 M20 28 H44" stroke="#C9C2FF" stroke-opacity=".5" stroke-width="1.2"/>
+            <path d="M84 16 a18 18 0 0 1 0 24 M92 10 a28 28 0 0 1 0 36 M100 4 a38 38 0 0 1 0 48" stroke="rgba(255,255,255,.5)" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <div class="numfocus" id="numfocus"></div>
+          <div class="num" id="num"></div>
+          <div class="cbot">
+            <div><div class="k">Cardholder</div><div class="v" id="cName">Mira Sato</div></div>
+            <div><div class="k">Valid thru</div><div class="v" id="cExp">09/29</div></div>
+            <svg class="mark" width="64" height="40" viewBox="0 0 64 40" fill="none">
+              <path d="M20 2 L36 11 V29 L20 38 L4 29 V11 Z" stroke="#A69BFF" stroke-width="1.6"/>
+              <path d="M20 10 L28 20 L20 30 L12 20 Z" fill="#7C6CFF" fill-opacity=".55" stroke="#C9C2FF" stroke-width="1"/>
+              <path d="M42 12 L47 28 L52 12 M55 12 L63 28 M63 12 L55 28" stroke="#F2F3F7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+        <div class="face back">
+          <div class="stripe"></div>
+          <div class="sig"></div>
+          <div class="cvvlab">CVV</div>
+          <div class="cvvbox" id="cvvbox"><span class="ph">•••</span></div>
+          <svg class="engrave" viewBox="0 0 520 328" fill="none">
+            <g stroke="rgba(255,255,255,.22)"><path d="M16 128 V116 H28"/><path d="M504 222 V234 H492"/></g>
+            <g stroke="rgba(255,255,255,.12)"><path d="M34 240 H486" stroke-dasharray="2 6"/></g>
+          </svg>
+          <div class="bline"><span>Authorized signature</span><span>VX//Pay · secure element 07</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form" id="form">
+    <div class="fhead">
+      <div><div class="fk">Upgrade plan</div><div class="ft">Team Pro</div></div>
+      <div class="price">$24<small> / MO</small></div>
+    </div>
+    <div class="fsub">Unlimited projects · 10 seats · priority sync</div>
+    <label class="fl" id="flNum"><div class="lab"><span>Card number</span><em id="numErr">Enter all 16 digits</em></div>
+      <input class="field" id="inNum" inputmode="numeric" autocomplete="off" placeholder="0000 0000 0000 0000" maxlength="19"></label>
+    <label class="fl"><div class="lab"><span>Name on card</span></div>
+      <input class="field" id="inName" autocomplete="off" value="Mira Sato" maxlength="22"></label>
+    <div class="two">
+      <label class="fl" id="flExp"><div class="lab"><span>Expiry</span></div><input class="field" id="inExp" autocomplete="off" value="09 / 29" maxlength="7"></label>
+      <label class="fl" id="flCvv"><div class="lab"><span>CVV</span><em>3 digits</em></div><input class="field" id="inCvv" type="password" inputmode="numeric" autocomplete="off" placeholder="•••" maxlength="3"></label>
+    </div>
+    <button class="btn pay" id="pay">Upgrade · $24</button>
+    <div class="secure">Encrypted · cancel anytime</div>
+  </div>
+
+  <div class="verdict" id="verdict">
+    <div class="vt" id="vt"><span class="badge"><svg width="34" height="34" viewBox="0 0 34 34"><path d="M8 18 L14.5 24 L26 11" pathLength="100"/></svg></span><span id="vtText">Processing…</span></div>
+    <div class="vm" id="vm"><b>$24.00</b> · next charge Nov 26</div>
+  </div>
+
+  <div class="status-line"><span>Veraetogrex · T05</span><span>Test decline: 4000 0000 0000 0002</span></div>
+</div>
+
+<script src="_shared/stage.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const cardmove = $('#cardmove'), persp = $('#persp'), card3d = $('#card3d'), numEl = $('#num'), numfocus = $('#numfocus'), cvvbox = $('#cvvbox');
+const inNum = $('#inNum'), inName = $('#inName'), inExp = $('#inExp'), inCvv = $('#inCvv'), payBtn = $('#pay'), form = $('#form');
+const sheen = $('#sheen'), outline = $('#outline'), orun = $('#orun'), obase = $('#obase');
+const vt = $('#vt'), vtText = $('#vtText'), vm = $('#vm'), l2 = $('#l2'), sPay = $('#sPay'), sDone = $('#sDone');
+const flood = $('#flood'), waves = [$('#cw1'), $('#cw2')];
+const DECLINE = '4000000000000002';
+const K = 1.15, HOME = { x: 130, y: 272 }, CENTER = { x: 720 - 260 * K, y: 384 - 164 * K };
+let busy = false, flow = null;
+
+// card number slots
+const slots = [];
+(() => { for (let g = 0; g < 4; g++) { const gEl = document.createElement('span'); gEl.className = 'g';
+  for (let k = 0; k < 4; k++) { const i = document.createElement('i'); i.className = 'ph'; i.textContent = '•'; gEl.appendChild(i); slots.push(i); } numEl.appendChild(gEl); } })();
+
+const digitsOf = v => v.replace(/\D/g, '').slice(0, 16);
+const group = d => d.replace(/(.{4})(?=.)/g, '$1 ');
+function renderNum() {
+  const d = digitsOf(inNum.value), focused = document.activeElement === inNum;
+  slots.forEach((s, i) => {
+    const want = d[i] || '•', was = s.textContent;
+    if (want !== was) { s.textContent = want; s.classList.toggle('ph', !d[i]); if (d[i]) { s.classList.remove('pop'); void s.offsetWidth; s.classList.add('pop'); } }
+    s.classList.toggle('cur', focused && i === d.length && d.length < 16);
+  });
+  numfocus.classList.toggle('on', focused);
+}
+function renderCvv() {
+  const n = inCvv.value.length;
+  cvvbox.innerHTML = '•'.repeat(n) + (n < 3 ? `<span class="ph">${'•'.repeat(3 - n)}</span>` : '');
+}
+function setFlip(on) {
+  if (card3d.classList.contains('flipped') !== on) persp.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.045) translateY(-6px)' }, { transform: 'scale(1)' }], { duration: 700, easing: 'cubic-bezier(.4,0,.2,1)' });
+  card3d.classList.toggle('flipped', on); cvvbox.classList.toggle('on', on);
+}
+function place(x, y, sc = 1) { cardmove.style.transform = `translate(${x - HOME.x}px,${y - HOME.y}px) scale(${K * sc})`; }
+
+function reset() {
+  busy = false; flow = null;
+  inNum.value = ''; inCvv.value = ''; inName.value = 'Mira Sato'; inExp.value = '09 / 29';
+  $('#cName').textContent = 'Mira Sato'; $('#cExp').textContent = '09/29';
+  slots.forEach(s => { s.textContent = '•'; s.className = 'ph'; });
+  renderNum(); renderCvv(); setFlip(false);
+  card3d.style.transition = 'none'; void card3d.offsetWidth; card3d.style.transition = '';
+  place(HOME.x, HOME.y); persp.classList.remove('shake');
+  form.style.opacity = ''; form.style.transform = ''; form.style.filter = ''; form.style.pointerEvents = '';
+  document.querySelectorAll('.fl').forEach(f => f.classList.remove('bad'));
+  $('#numErr').textContent = 'Enter all 16 digits';
+  outline.style.opacity = 0; orun.style.stroke = ''; orun.style.color = ''; orun.setAttribute('stroke-dasharray', '200 800'); orun.style.strokeDashoffset = 0; obase.style.stroke = '';
+  vt.className = 'vt'; vt.style.opacity = 0; vt.style.transform = 'translateY(12px)'; vtText.textContent = 'Processing…';
+  vt.querySelector('.badge path').style.strokeDashoffset = 100;
+  vm.style.opacity = 0; sheen.style.opacity = 0;
+  l2.style.transform = 'scaleX(0)'; l2.style.background = '';
+  sPay.className = 'step on'; sDone.className = 'step';
+  flood.style.opacity = 0; flood.style.transform = 'scale(.1)'; waves.forEach(w => { w.style.opacity = 0; w.style.width = w.style.height = ''; }); card3d.classList.remove('won');
+}
+
+// ---------- interactive form ----------
+inNum.addEventListener('input', () => {
+  const d = digitsOf(inNum.value), g = group(d);
+  if (inNum.value !== g) inNum.value = g;
+  $('#flNum').classList.remove('bad');
+  renderNum();
+});
+inNum.addEventListener('focus', renderNum); inNum.addEventListener('blur', renderNum);
+inName.addEventListener('input', () => $('#cName').textContent = inName.value || 'Your name');
+inExp.addEventListener('input', () => {
+  const d = inExp.value.replace(/\D/g, '').slice(0, 4);
+  inExp.value = d.length > 2 ? d.slice(0, 2) + ' / ' + d.slice(2) : d;
+  $('#cExp').textContent = (d.slice(0, 2) || 'MM') + '/' + (d.slice(2) || 'YY');
+});
+inCvv.addEventListener('focus', () => { if (!busy) setFlip(true); });
+inCvv.addEventListener('blur', () => setFlip(false));
+inCvv.addEventListener('input', () => {
+  inCvv.value = inCvv.value.replace(/\D/g, '').slice(0, 3);
+  $('#flCvv').classList.remove('bad');
+  renderCvv();
+  if (inCvv.value.length === 3) Stage.later(() => { if (document.activeElement === inCvv && inCvv.value.length === 3) payBtn.focus({ preventScroll: true }); }, 260);
+});
+payBtn.addEventListener('click', () => { if (!busy) flow = pay(Stage.ctx()); });
+form.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target !== payBtn) { e.preventDefault(); payBtn.click(); } });
+
+function bad(fl, msg) {
+  fl.classList.add('bad'); if (msg) fl.querySelector('em').textContent = msg;
+  fl.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-10px)' }, { transform: 'translateX(8px)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(0)' }], { duration: 360 });
+}
+
+// ---------- checkout ----------
+async function pay(s) {
+  const d = digitsOf(inNum.value);
+  if (d.length < 16) { bad($('#flNum'), 'Enter all 16 digits'); inNum.focus(); return; }
+  if (inCvv.value.length < 3) { bad($('#flCvv'), '3 digits'); inCvv.focus(); return; }
+  busy = true; payBtn.blur(); setFlip(false);
+  const declined = d === DECLINE;
+  // form dissolves, card glides to centre, stepper heads for Done
+  form.style.pointerEvents = 'none';
+  s.tween(600, t => { l2.style.transform = `scaleX(${.35 * t})`; }, s.ease.out).catch(() => {});
+  await s.tween(600, t => {
+    form.style.opacity = 1 - t; form.style.transform = `translateX(${40 * t}px)`; form.style.filter = `blur(${8 * t}px)`;
+    place(s.lerp(HOME.x, CENTER.x, t), s.lerp(HOME.y, CENTER.y, t), 1 + .02 * Math.sin(Math.PI * t));
+  }, s.ease.inOut);
+  // processing: a Pulse outline runs around the card
+  vt.className = 'vt proc'; vtText.textContent = 'Processing…';
+  s.tween(260, t => { vt.style.opacity = t; vt.style.transform = `translateY(${12 * (1 - t)}px)`; }, s.ease.out).catch(() => {});
+  const RUN = declined ? 1050 : 1200;
+  await s.tween(RUN, (t, p) => {
+    outline.style.opacity = Math.min(1, p * 4);
+    orun.style.strokeDashoffset = -1000 * 1.6 * t;
+    sheen.style.opacity = Math.sin(Math.PI * p); sheen.style.backgroundPosition = `${120 - 140 * ((p * 1.6) % 1)}% 0`;
+    if (!declined) l2.style.transform = `scaleX(${.35 + .55 * t})`;
+  }, s.ease.inOut);
+  if (declined) {
+    orun.style.stroke = 'var(--flare)'; orun.style.color = 'var(--flare)'; obase.style.stroke = 'rgba(255,122,69,.35)';
+    await s.tween(220, t => orun.setAttribute('stroke-dasharray', `${200 + 800 * t} ${800 - 800 * t}`), s.ease.out);
+    persp.classList.remove('shake'); void persp.offsetWidth; persp.classList.add('shake');
+    vt.className = 'vt err'; vtText.textContent = 'Card declined';
+    vm.innerHTML = 'Issuer said no · try another card'; vm.style.opacity = 1;
+    l2.style.transform = 'scaleX(0)';
+    await s.wait(1500);
+    // back to the form with the number flagged
+    vm.style.opacity = 0;
+    await s.tween(500, t => {
+      vt.style.opacity = 1 - t; outline.style.opacity = 1 - t;
+      form.style.opacity = t; form.style.transform = `translateX(${40 * (1 - t)}px)`; form.style.filter = `blur(${8 * (1 - t)}px)`;
+      place(s.lerp(CENTER.x, HOME.x, t), s.lerp(CENTER.y, HOME.y, t));
+    }, s.ease.inOut);
+    reset_outline();
+    form.style.pointerEvents = '';
+    bad($('#flNum'), 'Card declined'); inCvv.value = ''; renderCvv();
+    busy = false; inNum.focus(); inNum.select();
+    return false;
+  }
+  // success: outline closes in Ion, tick, Team Pro
+  orun.style.stroke = 'var(--ion)'; orun.style.color = 'var(--ion)'; obase.style.stroke = 'rgba(63,224,208,.35)';
+  l2.style.background = 'var(--ion)';
+  await s.tween(260, t => { orun.setAttribute('stroke-dasharray', `${200 + 800 * t} ${800 - 800 * t}`); l2.style.transform = `scaleX(${.9 + .1 * t})`; }, s.ease.out);
+  sPay.className = 'step done'; sDone.className = 'step ion';
+  card3d.classList.add('won');
+  s.tween(1400, t => { flood.style.transform = `scale(${.1 + .9 * s.ease.out(Math.min(1, t * 1.7))})`; flood.style.opacity = t < .12 ? t / .12 : 1 - .6 * (t - .12) / .88; }, s.ease.linear).catch(() => {});
+  waves.forEach((w, i) => s.later(() => s.tween(1000, t => { w.style.width = 598 + 1500 * t + 'px'; w.style.height = 377 + 1100 * t + 'px'; w.style.opacity = (1 - t) * .9; }, s.ease.out).catch(() => {}), i * 170));
+  vt.className = 'vt ok'; vtText.textContent = "You're on Team Pro"; vt.style.opacity = 1; vt.style.transform = 'none';
+  vm.innerHTML = '<b>$24.00</b> · next charge Nov 26';
+  s.tween(300, t => { vm.style.opacity = t; }, s.ease.out).catch(() => {});
+  await s.tween(360, t => vt.querySelector('.badge path').style.strokeDashoffset = 100 - 100 * t, s.ease.out);
+  busy = false;
+  return true;
+}
+function reset_outline() { outline.style.opacity = 0; orun.style.stroke = ''; orun.style.color = ''; obase.style.stroke = ''; orun.setAttribute('stroke-dasharray', '200 800'); orun.style.strokeDashoffset = 0; vt.className = 'vt'; vt.style.opacity = 0; }
+
+// interactive only: click the card after success to start over
+cardmove.addEventListener('click', () => { if (!Stage.playing && !busy && sDone.classList.contains('ion')) Stage.reset(); });
+
+// the last half second of the demo: glide back to the empty form
+async function backToStart(s) {
+  sPay.className = 'step on'; sDone.className = 'step';
+  inNum.value = ''; inCvv.value = ''; renderCvv();
+  let cleared = false;
+  await s.tween(520, t => {
+    if (!cleared && t > .5) { cleared = true; slots.forEach(sl => { sl.textContent = '•'; sl.className = 'ph'; }); numEl.animate([{ opacity: .2 }, { opacity: 1 }], { duration: 220 }); }
+    const o = 1 - t;
+    vt.style.opacity = o; vm.style.opacity = o; outline.style.opacity = o;
+    flood.style.opacity = .4 * o;
+    form.style.opacity = t; form.style.transform = `translateX(${40 * o}px)`; form.style.filter = `blur(${8 * o}px)`;
+    place(s.lerp(CENTER.x, HOME.x, t), s.lerp(CENTER.y, HOME.y, t));
+    l2.style.transform = `scaleX(${o})`;
+  }, s.ease.inOut);
+  reset();
+}
+
+Stage.init({
+  reset,
+  cursorStart: [1030, 760],
+  async demo(s) {
+    await s.wait(40);
+    await s.click(inNum, { ms: 300, dx: 60 });                         // ≈0.35 s
+    await s.type(inNum, '4242 8817 3054 1907', { cps: 24, jitter: .2 }); // → ≈1.3 s, digits land on the card
+    await s.click(inCvv, { ms: 300 });                                  // ≈1.7 s · card turns around
+    await s.wait(100);
+    await s.type(inCvv, '731', { cps: 8, jitter: .1 });                 // ••• → auto-advance to the button, card turns back
+    await s.wait(330);
+    await s.click(payBtn, { ms: 380, dx: 40 });                        // ≈3.0 s
+    s.move([1030, 760], 900, { arc: .1 }).catch(() => {});
+    await flow;                                                         // processing → Team Pro ≈ 4.9, hold to 5.9 s
+    await s.wait(650);
+    await backToStart(s);
+  },
+});
+</script>
+</body>
+</html>
