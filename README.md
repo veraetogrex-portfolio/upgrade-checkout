@@ -2,7 +2,7 @@
 
 **The card turns around when you need the CVV.**
 
-![Upgrade Checkout preview](preview.jpg)
+![Upgrade Checkout preview](preview.gif)
 
 **Live demo:** [veraetogrex-portfolio.github.io/upgrade-checkout](https://veraetogrex-portfolio.github.io/upgrade-checkout/) · **Mockup:** [full-screen version](https://veraetogrex-portfolio.github.io/upgrade-checkout/mockup/upgrade-checkout.html)
 
